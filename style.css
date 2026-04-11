@@ -250,7 +250,7 @@ img { max-width: 100%; display: block; }
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 120px 24px 60px;
+    padding: 120px 24px 100px;
     position: relative;
     z-index: 1;
 }
@@ -352,7 +352,7 @@ img { max-width: 100%; display: block; }
     display: flex;
     gap: 16px;
     justify-content: center;
-    margin-bottom: 48px;
+    margin-bottom: 32px;
     flex-wrap: wrap;
 }
 
@@ -438,12 +438,16 @@ img { max-width: 100%; display: block; }
 /* Scroll indicator */
 .hero-scroll-indicator {
     position: absolute;
-    bottom: 40px;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
     animation: float-y 3s ease-in-out infinite;
+    z-index: 2;
+    pointer-events: none;
 }
 
 .hero-scroll-indicator span {
@@ -514,6 +518,13 @@ img { max-width: 100%; display: block; }
     background: var(--accent-gradient);
     border-radius: 3px;
     margin: 16px auto 0;
+}
+
+.section-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 12px;
+    font-weight: 400;
 }
 
 /* ============================
@@ -796,6 +807,132 @@ img { max-width: 100%; display: block; }
     color: #fff;
     border-radius: 50px;
     z-index: 2;
+}
+
+/* Language badge on card */
+.project-lang-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 50px;
+    z-index: 2;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Drag handle */
+.project-drag-handle {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    z-index: 2;
+    cursor: grab;
+    opacity: 0;
+    transition: var(--transition-fast);
+}
+
+.project-card:hover .project-drag-handle {
+    opacity: 1;
+}
+
+.project-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Drag state */
+.project-card.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+    border-color: var(--accent-primary);
+}
+
+/* Project stats */
+.project-stats {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.project-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.project-stat svg {
+    opacity: 0.7;
+}
+
+/* Skeleton loading */
+.project-skeleton {
+    pointer-events: none;
+}
+
+.skeleton-shimmer {
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, rgba(255,255,255,0.05) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+}
+
+.skeleton-line {
+    border-radius: 6px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* README loading spinner */
+.readme-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 48px 0;
+    color: var(--text-secondary);
+}
+
+.readme-loading-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.readme-empty {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--text-secondary);
+}
+
+.projects-error {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--text-secondary);
+    grid-column: 1 / -1;
 }
 
 .project-card-body {
