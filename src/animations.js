@@ -136,13 +136,13 @@ function initTypingEffect() {
     if (!el) return;
 
     const phrases = [
-        'build full platforms.',
-        'design scalable systems.',
-        'ship products fast.',
-        'win hackathons.',
-        'automate everything.',
-        'validate startup ideas.',
-        'turn ideas into reality.',
+        'build production-grade systems.',
+        'design scalable architectures.',
+        'write clean, maintainable code.',
+        'solve complex problems with DSA.',
+        'ship full-stack applications.',
+        'automate everything I can.',
+        'turn requirements into deployable code.',
     ];
 
     let phraseIndex = 0;

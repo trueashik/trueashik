@@ -824,39 +824,22 @@ img { max-width: 100%; display: block; }
     letter-spacing: 0.04em;
 }
 
-/* Drag handle */
-.project-drag-handle {
+/* Featured badge */
+.project-featured-badge {
     position: absolute;
     top: 12px;
     right: 12px;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: linear-gradient(135deg, #f5a623, #f7c948);
+    color: #1a1a1a;
+    border-radius: 50px;
     z-index: 2;
-    cursor: grab;
-    opacity: 0;
-    transition: var(--transition-fast);
 }
 
-.project-card:hover .project-drag-handle {
-    opacity: 1;
-}
-
-.project-drag-handle:active {
-    cursor: grabbing;
-}
-
-/* Drag state */
-.project-card.dragging {
-    opacity: 0.5;
-    transform: scale(0.95);
-    border-color: var(--accent-primary);
-}
 
 /* Project stats */
 .project-stats {
@@ -1262,6 +1245,13 @@ img { max-width: 100%; display: block; }
     margin-bottom: 12px;
 }
 
+.timeline-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
 .timeline-badge {
     display: inline-block;
     padding: 4px 14px;
@@ -1271,6 +1261,95 @@ img { max-width: 100%; display: block; }
     background: rgba(0, 212, 255, 0.08);
     border: 1px solid rgba(0, 212, 255, 0.2);
     border-radius: 50px;
+}
+
+.timeline-badge-hackathon {
+    color: #f5a623;
+    background: rgba(245, 166, 35, 0.1);
+    border-color: rgba(245, 166, 35, 0.25);
+}
+
+.timeline-dot-hackathon {
+    border-color: #f5a623;
+    color: #f5a623;
+    box-shadow: 0 0 12px rgba(245, 166, 35, 0.3);
+}
+
+/* ============================
+   DSA SECTION
+   ============================ */
+.dsa-section {
+    background: var(--bg-primary);
+}
+
+.dsa-content {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.dsa-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 20px;
+    transition: var(--transition-smooth);
+}
+
+.dsa-card:hover {
+    border-color: var(--border-glow);
+    box-shadow: var(--accent-glow);
+}
+
+.dsa-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.dsa-icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.dsa-card-title {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.dsa-card-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.dsa-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.dsa-meta-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    background: rgba(0, 212, 255, 0.06);
+    padding: 4px 12px;
+    border-radius: 50px;
+    border: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.dsa-card-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 /* ============================
@@ -1291,7 +1370,7 @@ img { max-width: 100%; display: block; }
 
 .contact-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 20px;
 }
 
@@ -1393,6 +1472,10 @@ img { max-width: 100%; display: block; }
     .skills-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .contact-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
@@ -1440,9 +1523,13 @@ img { max-width: 100%; display: block; }
     }
 
     .contact-grid {
-        grid-template-columns: 1fr;
-        max-width: 280px;
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 400px;
         margin: 0 auto;
+    }
+
+    .dsa-card-header {
+        flex-direction: column;
     }
 
     .about-stats {
