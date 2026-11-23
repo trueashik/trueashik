@@ -1,13 +1,12 @@
 /**
- * PROJECTS & DSA RENDERING ENGINE
+ * PROJECTS RENDERING ENGINE
  *
- * Reads PORTFOLIO_CONFIG from portfolio.config.js to determine:
- *   - Which repos to ignore
- *   - Which repos to show as DSA (separate section)
- *   - Fixed priority ordering (developer-set)
- *   - Featured badges
+ * Renders two types of project cards:
+ *   1. Featured projects — manually defined in PORTFOLIO_CONFIG.featuredProjects
+ *      These are your real products/experiments with rich descriptions and status badges.
+ *   2. GitHub repos — fetched live from the GitHub API, filtered and sorted by config.
  *
- * Fetches all project data live from the GitHub API.
+ * DSA section is now static HTML in index.html, so this module no longer renders it.
  */
 
 const GITHUB_API_URL = `https://api.github.com/users/${PORTFOLIO_CONFIG.username}/repos?per_page=100&sort=updated`;
@@ -25,6 +24,16 @@ const LANG_COLORS = {
     'C++': '#f34b7d', 'JavaScript': '#f1e05a', 'TypeScript': '#3178c6',
     'Python': '#3572A5', 'HTML': '#e34c26', 'CSS': '#563d7c',
     'default': '#8b949e'
+};
+
+/** Status badge color mapping */
+const STATUS_COLORS = {
+    'BUILDING': '#10b981',
+    'RESEARCH': '#7c3aed',
+    'PRODUCT': '#00d4ff',
+    'REPOSITORY': '#9898b0',
+    'HACKATHON': '#f5a623',
+    'EXPERIMENT': '#f472b6',
 };
 
 /**
@@ -99,23 +108,18 @@ function sortByPriority(projects) {
 function partitionRepos(allRepos) {
     const ignored = new Set(PORTFOLIO_CONFIG.ignoredRepos);
     const dsaSet = new Set(PORTFOLIO_CONFIG.dsaRepos);
+    const featuredIds = new Set(PORTFOLIO_CONFIG.featuredProjects.map(p => p.id));
 
     const projects = [];
-    const dsa = [];
 
     for (const repo of allRepos) {
         if (ignored.has(repo.id)) continue;
-        if (dsaSet.has(repo.id)) { dsa.push(repo); continue; }
+        if (dsaSet.has(repo.id)) continue;
+        if (featuredIds.has(repo.id.toLowerCase())) continue;
         projects.push(repo);
     }
 
-    return { projects: sortByPriority(projects), dsa };
-}
-
-function getAllLanguages(projects) {
-    const s = new Set();
-    projects.forEach(p => { if (p.language && p.language !== 'Unknown') s.add(p.language); });
-    return ['All', ...Array.from(s)];
+    return { projects: sortByPriority(projects) };
 }
 
 /**
@@ -156,7 +160,53 @@ function timeAgo(dateStr) {
 }
 
 /**
- * Create a project card
+ * Create a FEATURED project card (manually defined)
+ */
+function createFeaturedProjectCard(project) {
+    const card = document.createElement('div');
+    card.className = 'project-card project-card-featured animate-on-scroll';
+    card.setAttribute('data-project-type', 'featured');
+
+    const statusColor = project.statusColor || STATUS_COLORS[project.status] || '#9898b0';
+
+    const tagsHtml = project.tags.map(t => `<span class="project-tag">${t}</span>`).join('');
+
+    let actionsHtml = '';
+
+    if (project.website) {
+        actionsHtml += `
+        <a href="${project.website}" target="_blank" class="project-action-btn btn-live">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            Visit
+        </a>`;
+    }
+
+    if (project.repoUrl) {
+        actionsHtml += `
+        <a href="${project.repoUrl}" target="_blank" class="project-action-btn btn-repo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            Source
+        </a>`;
+    }
+
+    card.innerHTML = `
+        <div class="project-card-image">
+            <span class="project-icon">${project.icon}</span>
+            <div class="project-status-badge" style="background: ${statusColor};">${project.status}</div>
+        </div>
+        <div class="project-card-body">
+            <h3 class="project-card-title">${project.name}</h3>
+            <p class="project-card-tagline">${project.tagline}</p>
+            <p class="project-card-desc">${project.description}</p>
+            <div class="project-card-tags">${tagsHtml}</div>
+            <div class="project-card-actions">${actionsHtml}</div>
+        </div>`;
+
+    return card;
+}
+
+/**
+ * Create a GitHub repo card
  */
 function createProjectCard(project) {
     const card = document.createElement('div');
@@ -268,8 +318,7 @@ function closeProjectModal() {
 /**
  * Skeleton loading
  */
-function showSkeletonLoading(container, count = 6) {
-    container.innerHTML = '';
+function showSkeletonLoading(container, count = 3) {
     for (let i = 0; i < count; i++) {
         const el = document.createElement('div');
         el.className = 'project-card project-skeleton';
@@ -286,113 +335,59 @@ function showSkeletonLoading(container, count = 6) {
 }
 
 /**
- * Render DSA section
- */
-function renderDSASection(dsaRepos) {
-    const container = document.getElementById('dsa');
-    if (!container || dsaRepos.length === 0) return;
-
-    container.style.display = '';
-
-    const grid = container.querySelector('.dsa-content');
-    if (!grid) return;
-
-    dsaRepos.forEach(repo => {
-        const card = document.createElement('div');
-        card.className = 'dsa-card animate-on-scroll';
-        card.innerHTML = `
-            <div class="dsa-card-header">
-                <div class="dsa-icon">⚡</div>
-                <div>
-                    <h3 class="dsa-card-title">${repo.name}</h3>
-                    <p class="dsa-card-desc">${repo.description}</p>
-                </div>
-            </div>
-            <div class="dsa-card-meta">
-                <span class="dsa-meta-tag"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${repo.stars} stars</span>
-                <span class="dsa-meta-tag">${repo.language}</span>
-                <span class="dsa-meta-tag">${timeAgo(repo.updatedAt)}</span>
-            </div>
-            <div class="dsa-card-actions">
-                <a href="${repo.repoUrl}" target="_blank" class="project-action-btn btn-repo">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                    View Solutions
-                </a>
-                <button class="project-action-btn btn-readme" data-project-id="${repo.id}">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    README
-                </button>
-                <a href="https://leetcode.com/u/${PORTFOLIO_CONFIG.leetcodeUsername}" target="_blank" class="project-action-btn btn-live">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13.483 0a1.374 1.374 0 0 0-.961.438L7.116 6.226l-3.854 4.126a5.266 5.266 0 0 0-1.209 2.104 5.35 5.35 0 0 0-.125.513 5.527 5.527 0 0 0 .062 2.362 5.83 5.83 0 0 0 .349 1.017 5.938 5.938 0 0 0 1.271 1.818l4.277 4.193.039.038c2.248 2.165 5.852 2.133 8.063-.074l2.396-2.392c.54-.54.54-1.414.003-1.955a1.378 1.378 0 0 0-1.951-.003l-2.396 2.392a3.021 3.021 0 0 1-4.205.038l-.02-.019-4.276-4.193c-.652-.64-.972-1.469-.948-2.263a2.68 2.68 0 0 1 .066-.523 2.545 2.545 0 0 1 .619-1.164L9.13 8.114c1.058-1.134 3.204-1.27 4.43-.278l3.501 2.831c.593.48 1.461.387 1.94-.207a1.384 1.384 0 0 0-.207-1.943l-3.5-2.831c-.8-.647-1.766-1.045-2.774-1.202l2.015-2.158A1.384 1.384 0 0 0 13.483 0zm-2.866 12.815a1.38 1.38 0 0 0-1.38 1.382 1.38 1.38 0 0 0 1.38 1.382H20.79a1.38 1.38 0 0 0 1.38-1.382 1.38 1.38 0 0 0-1.38-1.382z"/></svg>
-                    LeetCode
-                </a>
-            </div>`;
-        grid.appendChild(card);
-    });
-}
-
-/**
  * Initialize everything
  */
 async function initProjects() {
-    const filterContainer = document.getElementById('projects-filter');
     const gridContainer = document.getElementById('projects-grid');
 
-    showSkeletonLoading(gridContainer);
+    // 1. Render featured projects FIRST (no network needed)
+    PORTFOLIO_CONFIG.featuredProjects.forEach(p => {
+        gridContainer.appendChild(createFeaturedProjectCard(p));
+    });
 
+    // 2. Add a separator label before GitHub repos
+    const separator = document.createElement('div');
+    separator.className = 'projects-separator animate-on-scroll';
+    separator.innerHTML = `<span class="separator-line"></span><span class="separator-text">More from GitHub</span><span class="separator-line"></span>`;
+    gridContainer.appendChild(separator);
+
+    // 3. Show skeleton placeholders for GitHub repos
+    showSkeletonLoading(gridContainer, 3);
+
+    // 4. Fetch GitHub repos
     let allRepos = await fetchGitHubRepos();
 
+    // Remove skeletons
+    gridContainer.querySelectorAll('.project-skeleton').forEach(el => el.remove());
+
     if (!allRepos || allRepos.length === 0) {
-        gridContainer.innerHTML = `
-            <div class="projects-error">
-                <p>⚠️ Could not load projects from GitHub.</p>
-                <p>Visit <a href="https://github.com/${PORTFOLIO_CONFIG.username}" target="_blank" style="color:var(--accent-primary);">github.com/${PORTFOLIO_CONFIG.username}</a></p>
-            </div>`;
-        return;
+        const errorEl = document.createElement('div');
+        errorEl.className = 'projects-error';
+        errorEl.innerHTML = `
+            <p>⚠️ Could not load projects from GitHub.</p>
+            <p>Visit <a href="https://github.com/${PORTFOLIO_CONFIG.username}" target="_blank" style="color:var(--accent-primary);">github.com/${PORTFOLIO_CONFIG.username}</a></p>`;
+        gridContainer.appendChild(errorEl);
+    } else {
+        // Partition using config (excludes DSA repos and featured project IDs)
+        const { projects } = partitionRepos(allRepos);
+
+        // Render GitHub repo cards
+        projects.forEach(p => gridContainer.appendChild(createProjectCard(p)));
     }
-
-    // Partition using config
-    const { projects, dsa } = partitionRepos(allRepos);
-
-    // Render DSA section
-    renderDSASection(dsa);
-
-    // --- PROJECTS ---
-    const languages = getAllLanguages(projects);
-    filterContainer.innerHTML = languages
-        .map((lang, i) => `<button class="filter-btn${i === 0 ? ' active' : ''}" data-filter="${lang}">${lang}</button>`)
-        .join('');
-
-    gridContainer.innerHTML = '';
-    projects.forEach(p => gridContainer.appendChild(createProjectCard(p)));
 
     // Re-observe scroll animations
     if (typeof initScrollAnimations === 'function') initScrollAnimations();
 
-    // Filter
-    filterContainer.addEventListener('click', (e) => {
-        if (!e.target.classList.contains('filter-btn')) return;
-        filterContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        const filter = e.target.dataset.filter;
-        gridContainer.querySelectorAll('.project-card').forEach(card => {
-            if (filter === 'All' || card.dataset.lang === filter) {
-                card.style.display = '';
-                card.style.animation = 'fadeInUp 0.4s ease forwards';
-            } else {
-                card.style.display = 'none';
-            }
-        });
-    });
-
-    // README clicks (works for both project and DSA cards)
+    // README clicks (works for GitHub repo cards)
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.btn-readme');
         if (!btn) return;
         e.stopPropagation();
         const pid = btn.dataset.projectId;
-        const project = allRepos.find(p => p.id === pid);
-        if (project) openProjectModal(project);
+        if (allRepos) {
+            const project = allRepos.find(p => p.id === pid);
+            if (project) openProjectModal(project);
+        }
     });
 
     // Close modal

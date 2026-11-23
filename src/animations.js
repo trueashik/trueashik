@@ -5,7 +5,6 @@
  * - Typing effect for hero tagline
  * - Counter animation for stats
  * - Cursor glow effect
- * - Parallax effect
  */
 
 /**
@@ -129,20 +128,18 @@ function initCursorGlow() {
 }
 
 /**
- * Typing Effect
+ * Typing Effect — updated phrases
  */
 function initTypingEffect() {
     const el = document.getElementById('typewriter');
     if (!el) return;
 
     const phrases = [
-        'build production-grade systems.',
-        'design scalable architectures.',
-        'write clean, maintainable code.',
-        'solve complex problems with DSA.',
-        'ship full-stack applications.',
-        'automate everything I can.',
-        'turn requirements into deployable code.',
+        'AI-powered products.',
+        'backend systems.',
+        'automation workflows.',
+        'startups.',
+        'things that solve problems.',
     ];
 
     let phraseIndex = 0;
@@ -217,7 +214,8 @@ function initCounters() {
                 if (entry.isIntersecting) {
                     const el = entry.target;
                     const target = parseInt(el.dataset.target, 10);
-                    animateCounter(el, 0, target, 1500);
+                    const suffix = el.dataset.suffix || '';
+                    animateCounter(el, 0, target, 1500, suffix);
                     observer.unobserve(el);
                 }
             });
@@ -228,7 +226,7 @@ function initCounters() {
     counters.forEach((c) => observer.observe(c));
 }
 
-function animateCounter(el, start, end, duration) {
+function animateCounter(el, start, end, duration, suffix) {
     const range = end - start;
     const startTime = performance.now();
 
@@ -240,7 +238,7 @@ function animateCounter(el, start, end, duration) {
         const eased = 1 - Math.pow(1 - progress, 3);
         const current = Math.round(start + range * eased);
 
-        el.textContent = current;
+        el.textContent = current + (progress >= 1 ? suffix : '');
 
         if (progress < 1) {
             requestAnimationFrame(update);
